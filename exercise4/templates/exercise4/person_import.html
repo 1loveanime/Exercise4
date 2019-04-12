@@ -1,0 +1,19 @@
+{% extends 'exercise4/base.html'%}
+
+{% block content %}
+<p>Please select your CSV file.</p>
+<form method="POST" enctype="multipart/form-data"> 
+	{% csrf_token %}
+	<div class="row">
+		<div class="col-md-1">
+			File:
+		</div>
+		<div class="col-md-11">
+			<input type="file" name="csv_file">
+		</div>
+	</div>
+	<br>
+	<a class="btn btn-dark" href="{% url 'welcome' %}">Back</a>
+	<button class="btn btn-dark" type="submit">Upload</button>
+</form>
+{% endblock %}

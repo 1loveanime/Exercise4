@@ -1,0 +1,22 @@
+{% extends 'exercise4/base.html'%}
+
+{% block content %}
+<form method="POST" enctype="multipart/form-data">
+	{% csrf_token %}
+	<table>
+		{% for field in form%}
+		<tr>
+			<td>{{ field.label_tag }}</td>
+			<td>{{ field }}</td>
+			<td>{{ field.errors }}</td>
+		</tr>
+		{% endfor %}
+		<tr>
+			<td>
+				<a class="btn btn-dark" href="{% url 'welcome' %}">Back</a>
+				<button class="btn btn-dark" type="submit">Save</button>
+			</td>
+		</tr>
+	</table>
+</form>
+{% endblock %}

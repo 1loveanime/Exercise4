@@ -1,0 +1,62 @@
+{% extends 'exercise4/base.html'%}
+
+{% block content %}
+<div class="row">
+	<div class="col-sm-5">
+		{% if user.is_authenticated %}
+			<h4>Welcome my friend {{ user.username }}!</h4>
+		{% endif %}
+	</div>
+	<div class="col-sm-7 text-right">
+		<form method="GET">
+			<button class="btn btn-dark" name="export_info_csv">Export Info to CSV</button>
+			<a class="btn btn-dark" href="{% url 'person_import' %}">Add Info via CSV</a>
+			<a class="btn btn-dark" href="{% url 'person_add' %}">Add Person Information <strong>+</strong></a>
+		</form>
+	</div>
+</div>
+<br>
+{% if user.is_authenticated %}
+	<div class="row">
+		<div class="col-sm-12">
+			<table class="welcomepagetable">
+				<tr>
+					<th>Profile Picture</th>
+					<th>First Name</th>
+					<th>Last Name</th>
+					<th>Contact Number</th>
+					<th>Address</th>
+					<th colspan="2">Actions</th>
+				</tr>
+				{% for person in person_list %}
+					<tr>
+						<td>
+							{% if person.profilepicture %}
+								<center><img style="height: 33px; width: 70px" src="{{ person.profilepicture.url }}"></center>
+							{% else %}
+								<p><center>NO IMAGE<center></p>
+							{% endif %}
+						</td>
+						<td>{{person.first_name}}</td>
+						<td>{{person.last_name}}</td>
+						<td>{{person.contact_number}}</td>
+						<td>{{person.address}}</td>
+						<td>
+							<a class="btn btn-default" href="{% url 'person_update' pk=person.pk %}">
+								<span class="glyphicon glyphicon-pencil"></span><small></small>
+							</a>
+						</td>
+						<td>
+							<a class="btn btn-default" href="{% url 'person_delete' pk=person.pk %}">
+								<span class="glyphicon glyphicon-trash"></span><small></small>
+							</a>
+						</td>
+					</tr>
+				{% endfor %}
+			</table>
+		</div>
+	</div>
+{% else %}
+	<p>No data... Please login to view the list of Person Informations.</p>
+{% endif %}
+{% endblock %}
