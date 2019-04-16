@@ -5,24 +5,54 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
+
 from .forms import RegistrationForm, PersonAddForm
 from .models import PersonDetail
 
 
-def welcome(request):
-	if request.user.is_authenticated:
-		person_list = PersonDetail.objects.filter(user=request.user).order_by('last_name')
-		if 'export_info_csv' in request.GET:
+
+
+from django.views.generic import ListView
+
+
+# def welcome(request):
+# 	if request.user.is_authenticated:	
+# 		person_list = PersonDetail.objects.filter(user=request.user).order_by('last_name')
+# 		if 'export_info_csv' in request.GET:
+# 			response = HttpResponse(content_type='text/csv')
+# 			response['Content-Disposition'] = 'attachment; filename="person_list.csv"'
+# 			writer = csv.writer(response)
+# 			writer.writerow(["First Name", "Last Name", "Contact Number", "Address"])
+# 			for field in person_list:
+# 				writer.writerow([field.first_name, field.last_name, field.contact_number, field.address])
+# 			return response
+# 	else:
+# 		person_list = PersonDetail.objects.none()
+# 	return render(request, 'exercise4/welcome.html', {'person_list':person_list})
+
+
+class Welcome(ListView):
+	template_name = 'exercise4/welcome.html'
+	model = PersonDetail
+	context_object_name = 'person_list'
+
+	def get(self, *args, **kwargs):
+		if 'export_info_csv' in self.request.GET:
 			response = HttpResponse(content_type='text/csv')
 			response['Content-Disposition'] = 'attachment; filename="person_list.csv"'
 			writer = csv.writer(response)
 			writer.writerow(["First Name", "Last Name", "Contact Number", "Address"])
+			person_list = PersonDetail.objects.filter(user=self.request.user)
 			for field in person_list:
 				writer.writerow([field.first_name, field.last_name, field.contact_number, field.address])
 			return response
-	else:
-		person_list = PersonDetail.objects.none()
-	return render(request, 'exercise4/welcome.html', {'person_list':person_list})
+		else:
+			return super().get(Welcome, self)
+
+	def get_queryset(self):
+			self.request.user.is_authenticated
+			person_list = PersonDetail.objects.filter(user=self.request.user).order_by('last_name')
+			return person_list
 
 
 def registration(request):
