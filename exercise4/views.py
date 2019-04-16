@@ -47,7 +47,7 @@ class Welcome(ListView):
 				writer.writerow([field.first_name, field.last_name, field.contact_number, field.address])
 			return response
 		else:
-			return super().get(Welcome, self)
+			return super().get(request, *args, **kwargs)
 
 	def get_queryset(self):
 			self.request.user.is_authenticated
