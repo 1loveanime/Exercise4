@@ -1,7 +1,7 @@
 {% extends 'exercise4/base.html'%}
 
 {% block content %}
-<p>Are you sure you want to delete information of {{form.first_name}} {{form.last_name}}?</p>
+<p>Are you sure you want to delete information of {{person_data.first_name}} {{person_data.last_name}}?</p>
 <form method="POST">
 	{% csrf_token %}
 	<a class="btn btn-dark" href="{% url 'welcome' %}">Back</a>
