@@ -22,9 +22,17 @@
 	</header>
 	<div class="container body-padding">
 		{% if messages %}
-            <ul class="messages" style="background-color: red">
+            <ul class="messages">
                 {% for message in messages %}
-                    <li class="{{ message.tags }}">{{ message }}</li>
+                	{% if message.level == 25 %}
+                		<div style="background-color: #00FF00">
+                   			<li class="{{ message.tags }}">{{ message }}</li>
+                		</div>
+                	{% else %}
+                		<div style="background-color: red">
+                			<li class="{{ message.tags }}">{{ message }}</li>
+                		</div>
+                	{% endif %}
                 {% endfor %}
             </ul>
         {% endif %}
