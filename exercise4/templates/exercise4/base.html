@@ -22,27 +22,30 @@
 	</header>
 	<div class="container body-padding">
 		{% if messages %}
-            <ul class="messages">
-                {% for message in messages %}
-                	{% if message.level == 25 %}
-                		<div style="background-color: #00FF00">
-                   			<li class="{{ message.tags }}">{{ message }}</li>
-                		</div>
-                	{% else %}
-                		<div style="background-color: red">
-                			<li class="{{ message.tags }}">{{ message }}</li>
-                		</div>
-                	{% endif %}
-                {% endfor %}
-            </ul>
-        {% endif %}
-	    {% block content %}
-	    {% endblock %}
-    </div>
-    <footer class="fixed-bottom">
-    	<div class="text-center">
-    		<p>THIS IS FOR TESTING / EDUCATIONAL PURPOSES ONLY. ALL RIGHTS RESERVED TO RESPECTED OWNERS.</p>
-    	</div>
-    </footer>
+			<ul class="messages">
+				{% for message in messages %}
+					{% if message.level == 25 %}
+						<div style="background-color: #00FF00">
+							<li class="{{ message.tags }}">{{ message }}</li>
+						</div>
+					{% else %}
+						<div style="background-color: red">
+							<li class="{{ message.tags }}">{{ message }}</li>
+						</div>
+					{% endif %}
+				{% endfor %}
+			</ul>
+		{% endif %}
+		{% block content %}
+		{% endblock %}
+	</div>
+	<footer class="fixed-bottom">
+		<div class="text-center">
+			<p>THIS IS FOR TESTING / EDUCATIONAL PURPOSES ONLY. ALL RIGHTS RESERVED TO RESPECTED OWNERS.</p>
+		</div>
+	</footer>
+{% block js %}
+
+{% endblock %}
 </body>
 </html>

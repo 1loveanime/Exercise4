@@ -23,7 +23,7 @@ class Welcome(ListView):
 			queryset = PersonDetail.objects.filter(user=self.request.user)
 			dataset = person_resource.export(queryset)
 			response = HttpResponse(dataset.csv, content_type='text/csv')
-			response['Content-Disposition'] = 'attachment; filename="persons.csv"'
+			response['Content-Disposition'] = 'attachment; filename="personslist.csv"'
 			return response
 		else:
 			return super().get(request, *args, **kwargs)
