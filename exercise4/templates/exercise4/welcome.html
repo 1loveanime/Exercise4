@@ -60,4 +60,76 @@
 {% else %}
 	<p>No data... Please login to view the list of Person Informations.</p>
 {% endif %}
+
+
+
+
+
+
+
+<button class="btn btn-dark" id="id_show_modal">OPEN THE MODAL</button>
+
+<!-- modal for add person -->
+<div class="modal fade" id="id_add_person_modal" role="dialog">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">MODALLLLLLLLLLLLLLLLLL!!!!!</div>
+			<div class="modal-body">
+				<form method="POST" enctype="multipart/form-data" data-url="{% url 'person_add' %}">
+					{% csrf_token %}
+					<p>THIS IS INSIDE A MODAL</p>
+					<table>
+						{% for field in form %}
+						<tr>
+							<td>{{ field.label_tag }}</td>
+							<td>{{ field }}</td>
+							<td>{{ field.errors }}</td>
+						</tr>
+						{% endfor %}
+						<tr>
+							<td>
+								<a class="btn btn-dark" href="{% url 'welcome' %}">Back</a>
+								<button class="btn btn-dark" type="submit" id="id_save">Save</button>
+							</td>
+						</tr>
+					</table>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+<p id="demo">HAHAHAHAHA</p>
+
+
+
+{% endblock %}
+
+{% block js %}
+<script>
+$(document).ready(function(){
+	var ShowForm = function(){
+		document.getElementById("demo").innerHTML = "PUMASOK YES!!!";
+		$('#id_add_person_modal').modal('show');
+		console.log("Hello world!");
+		$.ajax({
+			url: "person/new",
+			type: 'get',
+			headers: { "X-CSRFToken": getCookie("csrftoken")},
+			dataType:'json',
+			beforeSend: function(result){
+				document.getElementById("demo").innerHTML = "PUMASOK sa loob YES!!!";
+				console.log("Hello world!");
+			},
+			success: function(result){
+				document.getElementById("demo").innerHTML = "PUMASOK sa loob YES!!!";
+				console.log("Hello world!");
+			}
+		});
+	}
+
+$('#id_show_modal').click(ShowForm);
+});
+</script>
 {% endblock %}

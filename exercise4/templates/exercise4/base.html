@@ -5,6 +5,9 @@
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 	<link rel="stylesheet" href="{% static 'exercise4/style.css' %}">
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+
 	<title>JapanSmile</title>
 </head>
 <body>
@@ -14,9 +17,9 @@
 		</div>
 		<div class="text-right loginbuttonposition">
 			{% if user.is_authenticated %}
-			<p>Logged in as: {{ user.username }}<small>(<a href="{% url 'logout' %}">logout?</a>)</small></p>
+				<p>Logged in as: {{ user.username }}<small>(<a href="{% url 'logout' %}">logout?</a>)</small></p>
 			{% else %}
-			<a href="{% url 'login' %}">Log In</a>
+				<a href="{% url 'login' %}">Log In</a>
 			{% endif %}
 		</div>
 	</header>
@@ -44,8 +47,9 @@
 			<p>THIS IS FOR TESTING / EDUCATIONAL PURPOSES ONLY. ALL RIGHTS RESERVED TO RESPECTED OWNERS.</p>
 		</div>
 	</footer>
-{% block js %}
 
+
+{% block js %}
 {% endblock %}
 </body>
 </html>

@@ -1,9 +1,10 @@
+from braces.views import AjaxResponseMixin, JsonRequestResponseMixin
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
-from django.views.generic import CreateView, DeleteView, ListView, TemplateView, UpdateView
+from django.views.generic import CreateView, DeleteView, ListView, TemplateView, UpdateView, View
 from tablib import Dataset
 
 from .forms import RegistrationForm, PersonAddForm
@@ -12,10 +13,11 @@ from .resources import PersonResource
 
 
 @method_decorator(login_required, name='dispatch')
-class Welcome(ListView):
+class WelcomeView(ListView):
 	template_name = 'exercise4/welcome.html'
 	model = PersonDetail
 	context_object_name = 'person_list'
+	form_class = PersonAddForm
 
 	def get(self, request, *args, **kwargs):
 		if 'export_info_csv' in self.request.GET:
@@ -33,7 +35,6 @@ class Welcome(ListView):
 			person_list = PersonDetail.objects.filter(user=self.request.user).order_by('last_name')
 			return person_list
 
-
 class Registration(CreateView):
 	template_name = 'registration/registration.html'
 	form_class = RegistrationForm
@@ -45,7 +46,6 @@ class Registration(CreateView):
 
 
 class PersonSaveMixin(object):
-
 	def form_valid(self, form):
 		form_modify = form.save(commit=False)
 		form_modify.user = self.request.user
@@ -54,10 +54,20 @@ class PersonSaveMixin(object):
 
 
 @method_decorator(login_required, name='dispatch')
-class PersonAdd(PersonSaveMixin, CreateView):
+class PersonAdd(AjaxResponseMixin, JsonRequestResponseMixin, PersonSaveMixin, CreateView):
 	template_name = 'exercise4/person_add.html'
 	form_class = PersonAddForm
 	success_url = '/'
+
+	def post_ajax(self, request, *args, **kwargs):
+		return self.render_json_response({
+				"status": "OK",
+				"success": True,
+			})
+
+		
+class PersonAddAjaxView(View):
+	pass
 
 
 @method_decorator(login_required, name='dispatch')
