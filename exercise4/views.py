@@ -2,9 +2,9 @@ from braces.views import AjaxResponseMixin, JsonRequestResponseMixin
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.decorators import method_decorator
-from django.views.generic import CreateView, DeleteView, ListView, TemplateView, UpdateView, View
+from django.views.generic import CreateView, DeleteView, ListView, TemplateView, UpdateView, FormView, View
 from tablib import Dataset
 
 from .forms import RegistrationForm, PersonAddForm
@@ -12,8 +12,25 @@ from .models import PersonDetail
 from .resources import PersonResource
 
 
+class Registration(CreateView):
+	template_name = 'registration/registration.html'
+	form_class = RegistrationForm
+	success_url = '/accounts/login/'
+
+	def form_valid(self, form):
+		form.save()
+		return super().form_valid(form)
+
+class PersonSaveMixin(object):
+	def form_valid(self, form):
+		form_modify = form.save(commit=False)
+		form_modify.user = self.request.user
+		form_modify.save()
+		return super().form_valid(form)
+
+
 @method_decorator(login_required, name='dispatch')
-class WelcomeView(ListView):
+class WelcomeView(CreateView, ListView):
 	template_name = 'exercise4/welcome.html'
 	model = PersonDetail
 	context_object_name = 'person_list'
@@ -35,39 +52,42 @@ class WelcomeView(ListView):
 			person_list = PersonDetail.objects.filter(user=self.request.user).order_by('last_name')
 			return person_list
 
-class Registration(CreateView):
-	template_name = 'registration/registration.html'
-	form_class = RegistrationForm
-	success_url = '/accounts/login/'
-
-	def form_valid(self, form):
-		form.save()
-		return super().form_valid(form)
 
 
-class PersonSaveMixin(object):
-	def form_valid(self, form):
-		form_modify = form.save(commit=False)
-		form_modify.user = self.request.user
-		form_modify.save()
-		return super().form_valid(form)
+
+
+
+	def get_object(self):
+		pk = self.kwargs.get('pk')
+		if pk:
+			queryset = self.get_queryset()
+			self.object = get_object_or_404(queryset, pk=pk)
+			return self.object
+
+
 
 
 @method_decorator(login_required, name='dispatch')
-class PersonAdd(AjaxResponseMixin, JsonRequestResponseMixin, PersonSaveMixin, CreateView):
-	template_name = 'exercise4/person_add.html'
-	form_class = PersonAddForm
-	success_url = '/'
-
+class PersonAddAjaxView(AjaxResponseMixin, JsonRequestResponseMixin, View):
 	def post_ajax(self, request, *args, **kwargs):
-		return self.render_json_response({
+		person_add_form = PersonAddForm(data=self.request.POST, files=self.request.FILES)
+
+		if person_add_form.is_valid():
+			form_modify = person_add_form.save(commit=False)
+			form_modify.user = self.request.user
+			form_modify.save()
+			return self.render_json_response({
 				"status": "OK",
 				"success": True,
 			})
-
-		
-class PersonAddAjaxView(View):
-	pass
+		else:
+			error_dict = person_add_form.errors.as_json()
+			print(error_dict)
+			return self.render_json_response({
+				"status": "OK",
+				"success": False,
+				"message": error_dict
+			})
 
 
 @method_decorator(login_required, name='dispatch')

@@ -11,7 +11,7 @@
 		<form method="GET">
 			<button class="btn btn-dark" name="export_info_csv">Export Info to CSV</button>
 			<a class="btn btn-dark" href="{% url 'person_import' %}">Add Info via CSV</a>
-			<a class="btn btn-dark" href="{% url 'person_add' %}">Add Person Information <strong>+</strong></a>
+			<button class="btn btn-dark" id="show_person_add_modal">Add Person Information <strong>+</strong></button>
 		</form>
 	</div>
 </div>
@@ -35,7 +35,7 @@
 							{% if person.profilepicture %}
 								<center><img style="height: 33px; width: 70px" src="{{ person.profilepicture.url }}"></center>
 							{% else %}
-								<p><center>NO IMAGE<center></p>
+								<p><center>NO IMAGE</center></p>
 							{% endif %}
 						</td>
 						<td>{{person.first_name}}</td>
@@ -44,13 +44,15 @@
 						<td>{{person.address}}</td>
 						<td>
 							<a class="btn btn-default" href="{% url 'person_update' pk=person.pk %}">
-								<span class="glyphicon glyphicon-pencil"></span><small></small>
+								<span class="glyphicon glyphicon-pencil"></span>
 							</a>
 						</td>
 						<td>
-							<a class="btn btn-default" href="{% url 'person_delete' pk=person.pk %}">
-								<span class="glyphicon glyphicon-trash"></span><small></small>
+							<a class="btn btn-default" href="{% url 'person_delete' pk=person.pk %}">ORIG
 							</a>
+							<button class="btn btn-default" id="show_person_delete_modal">
+								<span class="glyphicon glyphicon-trash"></span>
+							</button>
 						</td>
 					</tr>
 				{% endfor %}
@@ -61,23 +63,14 @@
 	<p>No data... Please login to view the list of Person Informations.</p>
 {% endif %}
 
-
-
-
-
-
-
-<button class="btn btn-dark" id="id_show_modal">OPEN THE MODAL</button>
-
-<!-- modal for add person -->
-<div class="modal fade" id="id_add_person_modal" role="dialog">
+<!-- modal for add person information -->
+<div class="modal fade" id="person_add_modal" role="dialog">
 	<div class="modal-dialog modal-lg">
 		<div class="modal-content">
-			<div class="modal-header">MODALLLLLLLLLLLLLLLLLL!!!!!</div>
+			<div class="modal-header">Create Person Information</div>
 			<div class="modal-body">
-				<form method="POST" enctype="multipart/form-data" data-url="{% url 'person_add' %}">
+				<form method="POST" class="modal-form" enctype="multipart/form-data" data-url="{% url 'ajax_person_add' %}">
 					{% csrf_token %}
-					<p>THIS IS INSIDE A MODAL</p>
 					<table>
 						{% for field in form %}
 						<tr>
@@ -88,8 +81,8 @@
 						{% endfor %}
 						<tr>
 							<td>
-								<a class="btn btn-dark" href="{% url 'welcome' %}">Back</a>
-								<button class="btn btn-dark" type="submit" id="id_save">Save</button>
+								<button class="btn btn-dark" data-dismiss="modal">Cancel</button>
+								<button class="btn btn-dark" type="submit">Save</button>
 							</td>
 						</tr>
 					</table>
@@ -99,37 +92,80 @@
 	</div>
 </div>
 
-
-<p id="demo">HAHAHAHAHA</p>
-
-
+<!-- modal for delete person information -->
+<div class="modal fade" id="person_delete_modal" role="dialog">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-body">
+				<p>Are you sure you want to delete information of {{person_data.first_name}} {{person_data.last_name}}?</p>
+				<form method="POST" id="delete_form">
+					{% csrf_token %}
+					<button class="btn btn-dark" data-dismiss="modal">Cancel</button>
+					<button class="btn btn-danger" type="submit">Confirm!</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
 
 {% endblock %}
 
 {% block js %}
 <script>
 $(document).ready(function(){
-	var ShowForm = function(){
-		document.getElementById("demo").innerHTML = "PUMASOK YES!!!";
-		$('#id_add_person_modal').modal('show');
-		console.log("Hello world!");
-		$.ajax({
-			url: "person/new",
-			type: 'get',
-			headers: { "X-CSRFToken": getCookie("csrftoken")},
-			dataType:'json',
-			beforeSend: function(result){
-				document.getElementById("demo").innerHTML = "PUMASOK sa loob YES!!!";
-				console.log("Hello world!");
-			},
-			success: function(result){
-				document.getElementById("demo").innerHTML = "PUMASOK sa loob YES!!!";
-				console.log("Hello world!");
-			}
-		});
-	}
+	$('#show_person_add_modal').on('click', showpersonaddmodal);
+	$('#person_add_modal').on('submit', saveaddpersonform);
 
-$('#id_show_modal').click(ShowForm);
+	$('#show_person_delete_modal').on('click', showpersondeletemodal);
+	$('#person_delete_modal').on('click', savedeletepersonform);
 });
+
+function showpersonaddmodal(event){
+	event.preventDefault();
+	$('#person_add_modal').modal('show');
+}
+
+function showpersondeletemodal(event, element){
+	event.preventDefault();
+	$("#id_pk_delete").val($(element).attr("data-pk"));
+	$('#person_delete_modal').modal('show');
+}
+
+function saveaddpersonform(event){
+	event.preventDefault();
+	var form = $('.modal-form');
+	$.ajax({
+		url:form.attr('data-url'),
+		data:form.serialize(),
+		type:form.attr('method'),
+		dataType:'json',
+		success:function(data){
+			$('#person_add_modal').modal('hide');
+			$('#id_first_name').val("");
+			$('#id_last_name').val("");
+			$('#id_contact_number').val("");
+			$('#id_address').val("");
+			$('#id_profilepicture').val("");
+			refresh();
+		}
+	});
+}
+
+function savedeletepersonform(event){
+	event.preventDefault();
+}
+
+function refresh(event){
+	event.preventDefault();
+	$.ajax({
+		url: '/',
+		type: 'GET',
+		dataType: 'html',
+		success: function(data){
+			$('.welcomepagetable').html();
+			console.log();
+		}
+	})
+}
 </script>
 {% endblock %}
