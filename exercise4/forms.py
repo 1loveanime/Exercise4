@@ -15,5 +15,5 @@ class PersonAddForm(ModelForm):
 	
 	class Meta:
 		model = PersonDetail
-		exclude = ('user',)
+		exclude = ('user', 'profilepicture', )
 		

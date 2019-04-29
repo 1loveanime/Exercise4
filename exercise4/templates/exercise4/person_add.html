@@ -27,18 +27,3 @@
 </div>
 
 {% endblock %}
-
-{% block js %}
-<script>
-$(document).ready(function(){
-	$('#show_modal').click(function(){
-		show_person_modal(this);
-	});
-
-	function show_person_modal(){
-		$('#add_person_modal').modal('show');
-}
-
-});
-</script>
-{% endblock %}

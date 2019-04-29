@@ -2,9 +2,9 @@ from braces.views import AjaxResponseMixin, JsonRequestResponseMixin
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
-from django.views.generic import CreateView, DeleteView, ListView, TemplateView, UpdateView, FormView, View
+from django.views.generic import CreateView, FormView, ListView, TemplateView, View
 from tablib import Dataset
 
 from .forms import RegistrationForm, PersonAddForm
@@ -21,16 +21,9 @@ class Registration(CreateView):
 		form.save()
 		return super().form_valid(form)
 
-class PersonSaveMixin(object):
-	def form_valid(self, form):
-		form_modify = form.save(commit=False)
-		form_modify.user = self.request.user
-		form_modify.save()
-		return super().form_valid(form)
-
 
 @method_decorator(login_required, name='dispatch')
-class WelcomeView(CreateView, ListView):
+class WelcomeView(FormView, ListView):
 	template_name = 'exercise4/welcome.html'
 	model = PersonDetail
 	context_object_name = 'person_list'
@@ -39,7 +32,7 @@ class WelcomeView(CreateView, ListView):
 	def get(self, request, *args, **kwargs):
 		if 'export_info_csv' in self.request.GET:
 			person_resource = PersonResource()
-			queryset = PersonDetail.objects.filter(user=self.request.user)
+			queryset = self.get_queryset()
 			dataset = person_resource.export(queryset)
 			response = HttpResponse(dataset.csv, content_type='text/csv')
 			response['Content-Disposition'] = 'attachment; filename="personslist.csv"'
@@ -49,7 +42,7 @@ class WelcomeView(CreateView, ListView):
 
 	def get_queryset(self):
 		if self.request.user.is_authenticated:
-			person_list = PersonDetail.objects.filter(user=self.request.user).order_by('last_name')
+			person_list = PersonDetail.objects.filter(user=self.request.user).order_by('first_name')
 			return person_list
 
 
@@ -57,20 +50,30 @@ class WelcomeView(CreateView, ListView):
 
 
 
-	def get_object(self):
-		pk = self.kwargs.get('pk')
-		if pk:
-			queryset = self.get_queryset()
-			self.object = get_object_or_404(queryset, pk=pk)
-			return self.object
-
-
 
 
 @method_decorator(login_required, name='dispatch')
-class PersonAddAjaxView(AjaxResponseMixin, JsonRequestResponseMixin, View):
+class PersonUpdateAjaxView(AjaxResponseMixin, JsonRequestResponseMixin, View):
 	def post_ajax(self, request, *args, **kwargs):
-		person_add_form = PersonAddForm(data=self.request.POST, files=self.request.FILES)
+		person_instance = None
+		data_pk = request.POST.get("data_pk", None)
+
+		if data_pk:
+			if PersonDetail.objects.filter(pk=data_pk).exists():
+				person_instance = PersonDetail.objects.get(pk=data_pk)
+
+		if person_instance:
+			person_add_form = PersonAddForm(data=self.request.POST, instance=person_instance)
+		else:
+			person_add_form = PersonAddForm(data=self.request.POST)
+
+
+
+
+
+
+
+
 
 		if person_add_form.is_valid():
 			form_modify = person_add_form.save(commit=False)
@@ -79,10 +82,16 @@ class PersonAddAjaxView(AjaxResponseMixin, JsonRequestResponseMixin, View):
 			return self.render_json_response({
 				"status": "OK",
 				"success": True,
+				"pk": form_modify.pk,
+				"first_name": form_modify.first_name,
+				"last_name": form_modify.last_name,
+				"contact_number": form_modify.contact_number,
+				"address": form_modify.address,
+				"profilepicture": form_modify.profilepicture.url,
+				"is_update": bool(person_instance),
 			})
 		else:
 			error_dict = person_add_form.errors.as_json()
-			print(error_dict)
 			return self.render_json_response({
 				"status": "OK",
 				"success": False,
@@ -90,26 +99,27 @@ class PersonAddAjaxView(AjaxResponseMixin, JsonRequestResponseMixin, View):
 			})
 
 
-@method_decorator(login_required, name='dispatch')
-class PersonDelete(DeleteView):
-	template_name = 'exercise4/person_delete_confirmation.html'
-	success_url = '/'
-	context_object_name = 'person_data'
 
-	def get_object(self):
-		person_data = get_object_or_404(PersonDetail, pk=self.kwargs.get('pk'))
-		return person_data
+
 
 
 @method_decorator(login_required, name='dispatch')
-class PersonUpdate(PersonSaveMixin, UpdateView):
-	template_name = 'exercise4/person_add.html'
-	form_class = PersonAddForm
-	success_url = '/'
+class PersonDeleteAjaxView(AjaxResponseMixin, JsonRequestResponseMixin, View):
 
-	def get_object(self):
-		person_data = get_object_or_404(PersonDetail, pk=self.kwargs.get('pk'))
-		return person_data
+		def post_ajax(self, request, *args, **kwargs):
+			data_pk = request.POST.get('data_pk', None)
+
+			if data_pk:
+				PersonDetail.objects.filter(pk=data_pk).delete()
+				return self.render_json_response({
+				"status": "OK",
+				"success": True,
+				})
+			else:
+				return self.render_json_response({
+				"status": "OK",
+				"success": False,
+				})
 
 
 @method_decorator(login_required, name='dispatch')
@@ -140,3 +150,36 @@ class PersonImport(TemplateView):
 			messages.success(self.request, "Successfully uploaded the CSV file!")
 
 		return redirect('/person/import')
+
+
+
+
+
+# @method_decorator(login_required, name='dispatch')
+# class PersonDelete(DeleteView):
+# 	template_name = 'exercise4/person_delete_confirmation.html'
+# 	success_url = '/'
+# 	context_object_name = 'person_data'
+
+# 	def get_object(self):
+# 		person_data = get_object_or_404(PersonDetail, pk=self.kwargs.get('pk'))
+# 		return person_data
+
+
+# @method_decorator(login_required, name='dispatch')
+# class PersonUpdate(PersonSaveMixin, UpdateView):
+# 	template_name = 'exercise4/person_add.html'
+# 	form_class = PersonAddForm
+# 	success_url = '/'
+
+# 	def get_object(self):
+# 		person_data = get_object_or_404(PersonDetail, pk=self.kwargs.get('pk'))
+# 		return person_data
+
+
+# class PersonSaveMixin(object):
+# 	def form_valid(self, form):
+# 		form_modify = form.save(commit=False)
+# 		form_modify.user = self.request.user
+# 		form_modify.save()
+# 		return super().form_valid(form)

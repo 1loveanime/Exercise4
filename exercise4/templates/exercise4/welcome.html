@@ -11,7 +11,7 @@
 		<form method="GET">
 			<button class="btn btn-dark" name="export_info_csv">Export Info to CSV</button>
 			<a class="btn btn-dark" href="{% url 'person_import' %}">Add Info via CSV</a>
-			<button class="btn btn-dark" id="show_person_add_modal">Add Person Information <strong>+</strong></button>
+			<button class="btn btn-dark" id="btn_show_person_add_modal">Add Person Information <strong>+</strong></button>
 		</form>
 	</div>
 </div>
@@ -29,33 +29,33 @@
 					<th>Address</th>
 					<th colspan="2">Actions</th>
 				</tr>
-				{% for person in person_list %}
-					<tr>
-						<td>
-							{% if person.profilepicture %}
-								<center><img style="height: 33px; width: 70px" src="{{ person.profilepicture.url }}"></center>
-							{% else %}
-								<p><center>NO IMAGE</center></p>
-							{% endif %}
-						</td>
-						<td>{{person.first_name}}</td>
-						<td>{{person.last_name}}</td>
-						<td>{{person.contact_number}}</td>
-						<td>{{person.address}}</td>
-						<td>
-							<a class="btn btn-default" href="{% url 'person_update' pk=person.pk %}">
-								<span class="glyphicon glyphicon-pencil"></span>
-							</a>
-						</td>
-						<td>
-							<a class="btn btn-default" href="{% url 'person_delete' pk=person.pk %}">ORIG
-							</a>
-							<button class="btn btn-default" id="show_person_delete_modal">
-								<span class="glyphicon glyphicon-trash"></span>
-							</button>
-						</td>
-					</tr>
-				{% endfor %}
+				<tbody>
+					{% for person in person_list %}
+						<tr>
+							<td class="person-profile-picture">
+								{% if person.profilepicture %}
+									<center><img class="imahe-ng-studyante" style="height: 33px; width: 70px" src="{{ person.profilepicture.url }}"></center>
+								{% else %}
+									<p><center>NO IMAGE</center></p>
+								{% endif %}
+							</td>
+							<td class="person-first-name">{{person.first_name}}</td>
+							<td class="person-last-name">{{person.last_name}}</td>
+							<td class="person-contact-number">{{person.contact_number}}</td>
+							<td class="person-address">{{person.address}}</td>
+							<td align="center">
+								<button class="btn btn-default btn-show-person-update-modal" data-pk="{{person.pk}}">
+									<span class="glyphicon glyphicon-pencil"></span>
+								</button>
+							</td>
+							<td align="center">
+								<button class="btn btn-default btn-show-person-delete-modal" data-pk="{{person.pk}}">
+									<span class="glyphicon glyphicon-trash"></span>
+								</button>
+							</td>
+						</tr>
+					{% endfor %}
+				</tbody>
 			</table>
 		</div>
 	</div>
@@ -63,26 +63,31 @@
 	<p>No data... Please login to view the list of Person Informations.</p>
 {% endif %}
 
-<!-- modal for add person information -->
-<div class="modal fade" id="person_add_modal" role="dialog">
-	<div class="modal-dialog modal-lg">
+<!-- modal for add/update person information -->
+<div class="modal fade" id="person_update_modal" role="dialog">
+	<div class="modal-dialog">
 		<div class="modal-content">
-			<div class="modal-header">Create Person Information</div>
+			<div class="modal-header">Input Person Information</div>
 			<div class="modal-body">
-				<form method="POST" class="modal-form" enctype="multipart/form-data" data-url="{% url 'ajax_person_add' %}">
+				<form method="POST" class="modal-form" data-url="{% url 'ajax_person_update' %}" enctype="multipart/form-data">
 					{% csrf_token %}
+					<div class="row hidden">
+						<input type="hidden" id="id_update_pk" name="data_pk" value=""> 
+					</div>
 					<table>
 						{% for field in form %}
-						<tr>
-							<td>{{ field.label_tag }}</td>
-							<td>{{ field }}</td>
-							<td>{{ field.errors }}</td>
-						</tr>
+						<div>
+							<tr >
+								<td>{{ field.label_tag }}</td>
+								<td>{{ field }}</td>
+								<td>{{ field.errors }}</td>
+							</tr>
+						</div>
 						{% endfor %}
 						<tr>
 							<td>
 								<button class="btn btn-dark" data-dismiss="modal">Cancel</button>
-								<button class="btn btn-dark" type="submit">Save</button>
+								<button type="submit" class="btn btn-dark" >Save</button>
 							</td>
 						</tr>
 					</table>
@@ -94,65 +99,125 @@
 
 <!-- modal for delete person information -->
 <div class="modal fade" id="person_delete_modal" role="dialog">
-	<div class="modal-dialog modal-lg">
+	<div class="modal-dialog">
 		<div class="modal-content">
 			<div class="modal-body">
-				<p>Are you sure you want to delete information of {{person_data.first_name}} {{person_data.last_name}}?</p>
-				<form method="POST" id="delete_form">
+				<p>Are you sure you want to delete this information?</p>
+				<form method="POST" id="delete_form" data-url="{% url 'ajax_person_delete' %}">
 					{% csrf_token %}
+					<div class="row hidden">
+						<input type="hidden" id="id_delete_pk" name="data_pk" value=""> 
+					</div>
 					<button class="btn btn-dark" data-dismiss="modal">Cancel</button>
-					<button class="btn btn-danger" type="submit">Confirm!</button>
+					<button type="submit" class="btn btn-danger" >Confirm!</button>
 				</form>
 			</div>
 		</div>
 	</div>
 </div>
-
 {% endblock %}
 
 {% block js %}
 <script>
 $(document).ready(function(){
-	$('#show_person_add_modal').on('click', showpersonaddmodal);
-	$('#person_add_modal').on('submit', saveaddpersonform);
+	$('#btn_show_person_add_modal').on('click', show_person_add_modal);
+	$('#person_update_modal').on('submit', add_person_form);
 
-	$('#show_person_delete_modal').on('click', showpersondeletemodal);
-	$('#person_delete_modal').on('click', savedeletepersonform);
+	$('.btn-show-person-update-modal').on('click', function(){
+		show_person_update_modal(this);
+	});
+
+	$('.btn-show-person-delete-modal').on('click', function(){
+		show_person_delete_modal(this);
+	});
+	$('#person_delete_modal').on('submit', delete_person_form);
 });
 
-function showpersonaddmodal(event){
+function show_person_add_modal(event){
 	event.preventDefault();
-	$('#person_add_modal').modal('show');
+	$('#id_update_pk').val("");
+	$('#id_first_name').val("");
+	$('#id_last_name').val("");
+	$('#id_contact_number').val("");
+	$('#id_address').val("");
+	$('#person_update_modal').modal('show');
 }
 
-function showpersondeletemodal(event, element){
-	event.preventDefault();
-	$("#id_pk_delete").val($(element).attr("data-pk"));
+function show_person_update_modal(element){
+	$('#id_update_pk').val($(element).attr("data-pk"));
+	$('#id_first_name').val($(element).parent().siblings('.person-first-name').html());
+	$('#id_last_name').val($(element).parent().siblings('.person-last-name').html());
+	$('#id_contact_number').val($(element).parent().siblings('.person-contact-number').html());
+	$('#id_address').val($(element).parent().siblings('.person-address').html());
+	$('#person_update_modal').modal('show');
+}
+
+function show_person_delete_modal(element){
+	$('#id_delete_pk').val($(element).attr("data-pk"));
 	$('#person_delete_modal').modal('show');
 }
 
-function saveaddpersonform(event){
+function add_person_form(event){
 	event.preventDefault();
 	var form = $('.modal-form');
 	$.ajax({
-		url:form.attr('data-url'),
-		data:form.serialize(),
-		type:form.attr('method'),
-		dataType:'json',
-		success:function(data){
-			$('#person_add_modal').modal('hide');
+		url: form.attr('data-url'),
+		data: form.serialize(),
+		type: form.attr('method'),
+		dataType: 'json',
+		success: function(data){
+			$('#person_update_modal').modal('hide');
 			$('#id_first_name').val("");
 			$('#id_last_name').val("");
 			$('#id_contact_number').val("");
 			$('#id_address').val("");
-			$('#id_profilepicture').val("");
-			refresh();
+
+			if(data.is_update == false){
+			 $(".welcomepagetable > tbody:last-child").append(`<td class="person-profile-picture"><center>`
+			 	+ `<img class="imahe-ng-studyante" style="height: 33px; width: 70px" src="${data.profilepicture}">`
+			 	+ `</center></td>`
+			 	+ `<td class="person-first-name">${data.first_name}</td>`
+				+ `<td class="person-last-name">${data.last_name}</td>`
+				+ `<td class="person-contact-number">${data.contact_number}</td>`
+				+ `<td class="person-address">${data.address}</td>`
+				+ `<td align="center">`
+				+ `<button class="btn btn-default btn-show-person-update-modal" data-pk="${data.pk}">`
+				+ `<span class="glyphicon glyphicon-pencil"></span>`
+				+ `</button></td>`
+				+ `<td align="center">`
+				+ `<button class="btn btn-default btn-show-person-delete-modal" data-pk="${data.pk}">`
+				+ `<span class="glyphicon glyphicon-trash"></span>`
+				+ `</button></td>`
+			 	);
+			}
+			else {
+
+
+
+
+
+
+
+
+
+				
+			}
 		}
 	});
 }
 
-function savedeletepersonform(event){
+function delete_person_form(event){
 	event.preventDefault();
+	var form = $('#delete_form');
+	$.ajax({
+		url: form.attr('data-url'),
+		data: form.serialize(),
+		type: form.attr('method'),
+		dataType: 'json',
+		success: function(){
+			$('#person_delete_modal').modal('hide');
+		}
+	})
 }
 
 function refresh(event){
@@ -163,7 +228,6 @@ function refresh(event){
 		dataType: 'html',
 		success: function(data){
 			$('.welcomepagetable').html();
-			console.log();
 		}
 	})
 }
