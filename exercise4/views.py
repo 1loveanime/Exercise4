@@ -28,6 +28,7 @@ class WelcomeView(FormView, ListView):
 	model = PersonDetail
 	context_object_name = 'person_list'
 	form_class = PersonAddForm
+	paginate_by = 10
 
 	def get(self, request, *args, **kwargs):
 		if 'export_info_csv' in self.request.GET:
@@ -46,12 +47,6 @@ class WelcomeView(FormView, ListView):
 			return person_list
 
 
-
-
-
-
-
-
 @method_decorator(login_required, name='dispatch')
 class PersonUpdateAjaxView(AjaxResponseMixin, JsonRequestResponseMixin, View):
 	def post_ajax(self, request, *args, **kwargs):
@@ -67,40 +62,27 @@ class PersonUpdateAjaxView(AjaxResponseMixin, JsonRequestResponseMixin, View):
 		else:
 			person_add_form = PersonAddForm(data=self.request.POST)
 
-
-
-
-
-
-
-
-
 		if person_add_form.is_valid():
 			form_modify = person_add_form.save(commit=False)
 			form_modify.user = self.request.user
 			form_modify.save()
 			return self.render_json_response({
-				"status": "OK",
-				"success": True,
-				"pk": form_modify.pk,
-				"first_name": form_modify.first_name,
-				"last_name": form_modify.last_name,
-				"contact_number": form_modify.contact_number,
-				"address": form_modify.address,
-				"profilepicture": form_modify.profilepicture.url,
-				"is_update": bool(person_instance),
+				'status': "OK",
+				'pk': form_modify.pk,
+				'first_name': form_modify.first_name,
+				'last_name': form_modify.last_name,
+				'contact_number': form_modify.contact_number,
+				'address': form_modify.address,
+				'profilepicture': form_modify.profilepicture.url,
+				'is_update': bool(person_instance),
+				'is_success': True,
 			})
 		else:
 			error_dict = person_add_form.errors.as_json()
 			return self.render_json_response({
-				"status": "OK",
-				"success": False,
-				"message": error_dict
+				'status': "OK",
+				'message': error_dict
 			})
-
-
-
-
 
 
 @method_decorator(login_required, name='dispatch')
@@ -112,13 +94,13 @@ class PersonDeleteAjaxView(AjaxResponseMixin, JsonRequestResponseMixin, View):
 			if data_pk:
 				PersonDetail.objects.filter(pk=data_pk).delete()
 				return self.render_json_response({
-				"status": "OK",
-				"success": True,
+				'status': "OK",
+				'pk': data_pk,
+
 				})
 			else:
 				return self.render_json_response({
-				"status": "OK",
-				"success": False,
+				'status': "OK",
 				})
 
 
@@ -150,36 +132,3 @@ class PersonImport(TemplateView):
 			messages.success(self.request, "Successfully uploaded the CSV file!")
 
 		return redirect('/person/import')
-
-
-
-
-
-# @method_decorator(login_required, name='dispatch')
-# class PersonDelete(DeleteView):
-# 	template_name = 'exercise4/person_delete_confirmation.html'
-# 	success_url = '/'
-# 	context_object_name = 'person_data'
-
-# 	def get_object(self):
-# 		person_data = get_object_or_404(PersonDetail, pk=self.kwargs.get('pk'))
-# 		return person_data
-
-
-# @method_decorator(login_required, name='dispatch')
-# class PersonUpdate(PersonSaveMixin, UpdateView):
-# 	template_name = 'exercise4/person_add.html'
-# 	form_class = PersonAddForm
-# 	success_url = '/'
-
-# 	def get_object(self):
-# 		person_data = get_object_or_404(PersonDetail, pk=self.kwargs.get('pk'))
-# 		return person_data
-
-
-# class PersonSaveMixin(object):
-# 	def form_valid(self, form):
-# 		form_modify = form.save(commit=False)
-# 		form_modify.user = self.request.user
-# 		form_modify.save()
-# 		return super().form_valid(form)
